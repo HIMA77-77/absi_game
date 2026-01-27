@@ -4,59 +4,57 @@
 <meta charset="UTF-8">
 <title>تحدي ABSI</title>
 <style>
-body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; }
-button { margin: 5px; padding: 8px; }
-ul { list-style:none; padding:0; }
-#game, #absiPanel, #lobby { display:none; }
+body { font-family: Arial; direction: rtl; }
+#loginPlayer, #loginAdmin, #lobby, #game, #top10 { display: none; margin: 20px; }
+button { margin: 5px; }
+#answers button { display:block; margin:5px 0; width: 200px; }
 </style>
 </head>
 <body>
 
-<div id="login">
-  <h2>تسجيل الدخول</h2>
-  <div id="absiLoginDiv">
-    <p>عبسي: كلمة السر</p>
-    <input type="password" id="absiPassword" placeholder="كلمة السر">
-    <button onclick="loginAbsi()">دخول عبسي</button>
-  </div>
-  <div id="playerLoginDiv">
-    <p>اللاعب: أدخل اسمك</p>
-    <input type="text" id="playerName" placeholder="اسمك">
-    <button onclick="loginPlayer()">دخول</button>
-  </div>
+<div id="loginAdmin">
+  <h2>عبسي: أدخل كلمة السر</h2>
+  <input id="adminPassword" placeholder="كلمة السر">
+  <button onclick="loginAdmin()">دخول</button>
+</div>
+
+<div id="loginPlayer">
+  <h2>أدخل اسمك للانضمام:</h2>
+  <input id="playerName" placeholder="اسمك">
+  <button onclick="joinPlayer()">انضم</button>
 </div>
 
 <div id="lobby">
-  <h3>لوبي انتظار</h3>
-  <p>عدد اللاعبين المنضمين: <span id="playerCount">0</span></p>
-  <p id="lobbyMsg"></p>
+  <h2>لوبي الانتظار</h2>
+  <p>عدد اللاعبين: <span id="playerCount">0</span></p>
+  <button id="startGameBtn" onclick="startGame()">ابدأ الجولة</button>
 </div>
 
 <div id="game">
   <h2 id="questionText"></h2>
   <div id="answers"></div>
-  <p>الوقت المتبقي: <span id="timer">10</span></p>
+  <p>الوقت المتبقي: <span id="timer">10</span> ثانية</p>
+  <button onclick="showAnswer()">عرض الإجابة الصحيحة</button>
+  <button onclick="nextQuestion()">السؤال التالي</button>
 </div>
 
-<div id="absiPanel">
-  <h3>لوحة عبسي</h3>
-  <button onclick="startGameFromAbsi()">ابدأ اللعبة</button>
-  <h4>أفضل 10 لاعبين</h4>
-  <ul id="top10"></ul>
-  <p>عدد اللاعبين: <span id="absiPlayerCount">0</span></p>
+<div id="top10">
+  <h3>Top 10</h3>
+  <ol id="topList"></ol>
 </div>
 
 <script>
-"use strict";
-
-let absiLogged = false;
-let players = {};
-let currentPlayerId = null;
+// ====== اللاعبين والنقاط ======
+let players = [];
+let scores = {};
+let usedQuestions = [];
 let currentQuestion = null;
 let timerInterval;
-let gameStarted = false;
+let timeLeft = 10;
+let adminLogged = false;
+let currentPlayerAnswers = {};
 
-// ====== هنا ستلصق أسطر الـ250 سؤال ======
+// ====== الأسئلة 250 ======
 let questions = [
 {id:1, question:"ما هو أطول نهر في العالم", answers:["النيل","الأمازون","الفرات","الدانوب"], correctIndex:0},
 {id:2, question:"ما هي أكبر قارة من حيث المساحة", answers:["آسيا","أفريقيا","أوروبا","أمريكا الشمالية"], correctIndex:0},
@@ -309,85 +307,96 @@ let questions = [
 {id:249, question:"ما هو الحيوان الذي لا يستطيع الطيران", answers:["النعامة","الحمامة","الصقر","الببغاء"], correctIndex:0},
 {id:250, question:"ما هو أطول نهر في آسيا", answers:["اليانغتسي","الهوانغ هي","الماكونغ","الغانج"], correctIndex:0}
 ];
-function loginAbsi(){
-  let pw = document.getElementById('absiPassword').value;
-  if(pw === 'ABSI_20'){
-    absiLogged = true;
-    document.getElementById('login').style.display='none';
-    document.getElementById('absiPanel').style.display='block';
-    document.getElementById('absiPlayerCount').innerText = Object.keys(players).length;
-  } else alert('كلمة السر خاطئة');
+
+
+// ====== وظائف الدخول ======
+function joinPlayer(){
+  const name = document.getElementById('playerName').value.trim();
+  if(name && !players.includes(name) && players.length < 900){
+    players.push(name);
+    scores[name] = 0;
+    document.getElementById('playerCount').innerText = players.length;
+    document.getElementById('loginPlayer').style.display = 'none';
+    document.getElementById('lobby').style.display = 'block';
+  }
 }
 
-function loginPlayer(){
-  let name = document.getElementById('playerName').value.trim();
-  if(name === '') return;
-  currentPlayerId = Date.now() + Math.random();
-  players[currentPlayerId] = {name:name, points:0};
-  document.getElementById('login').style.display='none';
-  document.getElementById('lobby').style.display='block';
-  document.getElementById('playerCount').innerText = Object.keys(players).length;
-  document.getElementById('lobbyMsg').innerText = 'بانتظار عبسي ليبدأ الجولة';
+function loginAdmin(){
+  const pass = document.getElementById('adminPassword').value.trim();
+  if(pass === 'ABSI_20'){
+    adminLogged = true;
+    document.getElementById('loginAdmin').style.display = 'none';
+    document.getElementById('lobby').style.display = 'block';
+  } else alert("كلمة السر خاطئة");
 }
 
-function startGameFromAbsi(){
-  gameStarted = true;
-  document.getElementById('lobby').style.display='none';
-  document.getElementById('game').style.display='block';
+// ====== بدء الجولة ======
+function startGame(){
+  if(players.length === 0){ alert("لا يوجد لاعبين"); return; }
   nextQuestion();
 }
 
+// ====== السؤال التالي ======
 function nextQuestion(){
-  clearInterval(timerInterval);
-  if(!window.questions || window.questions.length===0){ alert('انتهت جميع الأسئلة'); return; }
-  let index = Math.floor(Math.random()*window.questions.length);
-  currentQuestion = window.questions.splice(index,1)[0];
-  usedQuestions.push(currentQuestion)
+  if(questions.length === 0){ alert("انتهت كل الأسئلة!"); return; }
+  timeLeft = 10;
+  currentPlayerAnswers = {};
+  currentQuestion = questions.splice(Math.floor(Math.random()*questions.length),1)[0];
+  usedQuestions.push(currentQuestion);
+
+  document.getElementById('game').style.display = 'block';
   document.getElementById('questionText').innerText = currentQuestion.question;
-  let ansDiv = document.getElementById('answers');
-  ansDiv.innerHTML='';
-  currentQuestion.answers.forEach((a,i)=>{
-    let btn = document.createElement('button');
-    btn.innerText = a;
-    btn.onclick = ()=>answerQuestion(i);
-    ansDiv.appendChild(btn);
+
+  const answersDiv = document.getElementById('answers');
+  answersDiv.innerHTML = '';
+  currentQuestion.answers.forEach((ans,i)=>{
+    const btn = document.createElement('button');
+    btn.innerText = ans;
+    btn.onclick = ()=>registerAnswer(i);
+    answersDiv.appendChild(btn);
   });
-  startTimer();
-}
 
-function answerQuestion(idx){
   clearInterval(timerInterval);
-  let player = players[currentPlayerId];
-  if(idx === currentQuestion.correctIndex){
-    player.points += 1;
-  }
-  updateTop10();
-}
-
-function startTimer(){
-  let time = 10;
-  document.getElementById('timer').innerText = time;
   timerInterval = setInterval(()=>{
-    time--;
-    document.getElementById('timer').innerText = time;
-    if(time<=0){ clearInterval(timerInterval); }
+    timeLeft--;
+    document.getElementById('timer').innerText = timeLeft;
+    if(timeLeft <=0) clearInterval(timerInterval);
   },1000);
 }
 
-function showAnswer(){
-  alert('الإجابة الصحيحة: '+currentQuestion.answers[currentQuestion.correctIndex]);
+// ====== تسجيل الإجابة ======
+function registerAnswer(index){
+  // تسجيل النقاط تلقائياً بناءً على اللاعب المسجل مسبقاً
+  // هنا يجب تعديل لربط كل زر بلاعب حقيقي في واجهة متعددة اللاعبين
+  // حاليا تجربة واحدة: أول لاعب يضغط يحصل النقطة
+  let firstCorrect = Object.values(currentPlayerAnswers).indexOf(currentQuestion.correctIndex) === -1;
+  if(firstCorrect && index === currentQuestion.correctIndex){
+    // اختيار عشوائي للاسم في التجربة الواحدة (للتوضيح)
+    const playerName = players[0]; 
+    scores[playerName] +=1;
+    updateTop10();
+  }
+  currentPlayerAnswers[players[0]] = index;
 }
 
+// ====== عرض الإجابة الصحيحة ======
+function showAnswer(){
+  alert("الإجابة الصحيحة: " + currentQuestion.answers[currentQuestion.correctIndex]);
+}
+
+// ====== تحديث Top 10 ======
 function updateTop10(){
-  let ul = document.getElementById('top10');
-  ul.innerHTML='';
-  let top = Object.values(players).sort((a,b)=>b.points-a.points).slice(0,10);
-  top.forEach(p=>{
-    let li = document.createElement('li');
-    li.innerText = p.name + ' - ' + p.points;
-    ul.appendChild(li);
+  const top = Object.entries(scores).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const topList = document.getElementById('topList');
+  topList.innerHTML = '';
+  top.forEach(([name,score])=>{
+    const li = document.createElement('li');
+    li.innerText = name + ": " + score;
+    topList.appendChild(li);
   });
 }
 </script>
+
 </body>
 </html>
+
