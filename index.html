@@ -54,8 +54,8 @@ let timeLeft = 10;
 let adminLogged = false;
 let currentPlayerAnswers = {};
 
-// ====== الأسئلة 250 ======
-let questions = [
+// ====== الأسئلة 250 (مثال 10 أسئلة، أكمل بنفس الصيغة حتى 250) ======
+  let questions = [
 {id:1, question:"ما هو أطول نهر في العالم", answers:["النيل","الأمازون","الفرات","الدانوب"], correctIndex:0},
 {id:2, question:"ما هي أكبر قارة من حيث المساحة", answers:["آسيا","أفريقيا","أوروبا","أمريكا الشمالية"], correctIndex:0},
 {id:3, question:"أي كوكب يُعرف بالكوكب الأحمر", answers:["المريخ","الزهرة","الأرض","المشتري"], correctIndex:0},
@@ -308,7 +308,6 @@ let questions = [
 {id:250, question:"ما هو أطول نهر في آسيا", answers:["اليانغتسي","الهوانغ هي","الماكونغ","الغانج"], correctIndex:0}
 ];
 
-
 // ====== وظائف الدخول ======
 function joinPlayer(){
   const name = document.getElementById('playerName').value.trim();
@@ -352,7 +351,7 @@ function nextQuestion(){
   currentQuestion.answers.forEach((ans,i)=>{
     const btn = document.createElement('button');
     btn.innerText = ans;
-    btn.onclick = ()=>registerAnswer(i);
+    btn.onclick = ()=>registerAnswer(i, players[0]); // الربط المبسط للاعب واحد لتجربة
     answersDiv.appendChild(btn);
   });
 
@@ -364,19 +363,17 @@ function nextQuestion(){
   },1000);
 }
 
-// ====== تسجيل الإجابة ======
-function registerAnswer(index){
-  // تسجيل النقاط تلقائياً بناءً على اللاعب المسجل مسبقاً
-  // هنا يجب تعديل لربط كل زر بلاعب حقيقي في واجهة متعددة اللاعبين
-  // حاليا تجربة واحدة: أول لاعب يضغط يحصل النقطة
-  let firstCorrect = Object.values(currentPlayerAnswers).indexOf(currentQuestion.correctIndex) === -1;
+// ====== تسجيل الإجابة تلقائياً ======
+function registerAnswer(index, playerName){
+  if(currentPlayerAnswers[playerName]) return; // منع الإجابة أكثر من مرة
+  currentPlayerAnswers[playerName] = index;
+
+  // منح النقطة لأول إجابة صحيحة فقط
+  const firstCorrect = Object.values(currentPlayerAnswers).indexOf(currentQuestion.correctIndex) === -1;
   if(firstCorrect && index === currentQuestion.correctIndex){
-    // اختيار عشوائي للاسم في التجربة الواحدة (للتوضيح)
-    const playerName = players[0]; 
     scores[playerName] +=1;
     updateTop10();
   }
-  currentPlayerAnswers[players[0]] = index;
 }
 
 // ====== عرض الإجابة الصحيحة ======
@@ -384,7 +381,7 @@ function showAnswer(){
   alert("الإجابة الصحيحة: " + currentQuestion.answers[currentQuestion.correctIndex]);
 }
 
-// ====== تحديث Top 10 ======
+// ====== تحديث Top10 ======
 function updateTop10(){
   const top = Object.entries(scores).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const topList = document.getElementById('topList');
@@ -399,4 +396,5 @@ function updateTop10(){
 
 </body>
 </html>
+
 
