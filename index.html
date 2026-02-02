@@ -25,10 +25,11 @@ button { margin: 5px; }
 </div>
 
 <div id="lobby">
-  <h2>لوبي الانتظار</h2>
-  <p>عدد اللاعبين: <span id="playerCount">0</span></p>
-  <button id="startGameBtn" onclick="startGame()">ابدأ الجولة</button>
+  <h2>غرفة الانتظار</h2>
+  <p>بانتظار عبسي لبدء الجولة</p>
+  <p>عدد اللاعبين: <span id="lobbyCount">0</span></p>
 </div>
+
 
 <div id="game">
   <h2 id="questionText"></h2>
@@ -58,6 +59,9 @@ window.onload = function () {
   document.getElementById("loginPlayer").style.display = "block";
   document.getElementById("loginAdmin").style.display = "block";
 };
+function updateLobbyCount() {
+  document.getElementById("lobbyCount").innerText = players.length;
+}
 
 
 // ====== الأسئلة 250 (مثال 10 أسئلة، أكمل بنفس الصيغة حتى 250) ======
@@ -315,25 +319,26 @@ window.onload = function () {
 ];
 
 // ====== وظائف الدخول ======
-function joinPlayer(){
-  const name = document.getElementById('playerName').value.trim();
-  if(name && !players.includes(name) && players.length < 900){
-    players.push(name);
-    scores[name] = 0;
-    document.getElementById('playerCount').innerText = players.length;
-    document.getElementById('loginPlayer').style.display = 'none';
-    document.getElementById('lobby').style.display = 'block';
-  }
+function loginPlayer() {
+  const name = document.getElementById("playerName").value.trim();
+  if (!name) return alert("اكتب اسمك");
+
+  players.push({ name, score: 0 });
+  document.getElementById("loginPlayer").style.display = "none";
+  document.getElementById("lobby").style.display = "block";
+  updateLobbyCount();
 }
 
-function loginAdmin(){
-  const pass = document.getElementById('adminPassword').value.trim();
-  if(pass === 'ABSI_20'){
-    adminLogged = true;
-    document.getElementById('loginAdmin').style.display = 'none';
-    document.getElementById('lobby').style.display = 'block';
-  } else alert("كلمة السر خاطئة");
+
+function loginAdmin() {
+  const pass = document.getElementById("adminPass").value;
+  if (pass !== "ABSI_20") return alert("كلمة السر غلط");
+
+  adminLogged = true;
+  document.getElementById("loginAdmin").style.display = "none";
+  document.getElementById("lobby").style.display = "block";
 }
+
 
 // ====== بدء الجولة ======
 function startGame(){
