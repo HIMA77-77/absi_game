@@ -320,7 +320,7 @@ function updateLobbyCount() {
 ];
 
 // ====== وظائف الدخول ======
-function loginPlayer() {
+async function loginPlayer() {
   const name = document.getElementById("playerName").value.trim();
   if (!name) return alert("اكتب اسمك");
 
@@ -328,7 +328,15 @@ function loginPlayer() {
   document.getElementById("loginPlayer").style.display = "none";
   document.getElementById("lobby").style.display = "block";
   updateLobbyCount();
+
+  try {
+    await addDoc(collection(db, "players"), { name, score: 0 });
+    console.log("تم حفظ اللاعب على Firebase!");
+  } catch (e) {
+    console.error("خطأ في حفظ اللاعب:", e);
+  }
 }
+
 
 
 function loginAdmin() {
@@ -405,8 +413,26 @@ function updateTop10(){
   });
 }
 </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAPeiILAngHsoNDLZtEVwji_xAsOchIqkk",
+    authDomain: "absi-game.firebaseapp.com",
+    projectId: "absi-game",
+    storageBucket: "absi-game.appspot.com",
+    messagingSenderId: "466408644546",
+    appId: "1:466408644546:web:a79faadc32a400ca5b405b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+</script>
 
 </body>
 </html>
+
+
 
 
