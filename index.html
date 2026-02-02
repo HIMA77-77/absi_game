@@ -53,6 +53,12 @@ let timerInterval;
 let timeLeft = 10;
 let adminLogged = false;
 let currentPlayerAnswers = {};
+  // اظهار شاشات الدخول عند فتح الصفحة
+window.onload = function () {
+  document.getElementById("loginPlayer").style.display = "block";
+  document.getElementById("loginAdmin").style.display = "block";
+};
+
 
 // ====== الأسئلة 250 (مثال 10 أسئلة، أكمل بنفس الصيغة حتى 250) ======
   let questions = [
